@@ -1,8 +1,8 @@
 import pygame
 
 
-class HeroBullets(pygame.sprite.Sprite):
-    def __init__(self, screen, hero, direction, offset_x, sprites):
+class Bullets(pygame.sprite.Sprite):
+    def __init__(self, screen, hero, direction, offset_x, sprites, name_bullets):
         super().__init__()
         self.sprites = sprites
         self.offset_x = offset_x
@@ -12,7 +12,7 @@ class HeroBullets(pygame.sprite.Sprite):
         self.direction = direction
         self.rect.centerx = hero.rect.centerx
         self.rect.top = hero.rect.top
-        self.sprite = self.sprites[f"potato_pellet_" + self.direction][0]
+        self.sprite = self.sprites[name_bullets + self.direction][0]
         self.mask = None
 
     def get_position_x(self):
