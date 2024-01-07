@@ -8,7 +8,7 @@ class HeroBullets(pygame.sprite.Sprite):
         self.offset_x = offset_x
         self.screen = screen
         self.rect = pygame.Rect(0, 0, 32, 32)
-        self.speed = 10
+        self.speed = 4
         self.direction = direction
         self.rect.centerx = hero.rect.centerx
         self.rect.top = hero.rect.top

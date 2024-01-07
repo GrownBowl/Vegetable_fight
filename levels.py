@@ -1,8 +1,8 @@
 from objects import Block
-from personages import Hero
+from personages import Hero, Tomato
 
 
-def create_first_level(block_size, screen_width, screen_height, block, sprites):
+def create_first_level(block_size, screen_width, screen_height, block, *sprites):
     first = [Block(i * block_size, screen_height - 6 * block_size, block_size, block) for i in range(12)]
     second = [Block(i * block_size, screen_height - 11 * block_size, block_size, block) for i in range(8, 10)]
     third = [Block(i * block_size, screen_height - 9 * block_size, block_size, block) for i in range(13, 18)]
@@ -18,5 +18,7 @@ def create_first_level(block_size, screen_width, screen_height, block, sprites):
     thirteen = [Block(i * block_size, screen_height - 8 * block_size, block_size, block) for i in range(56, 59)]
     total_objects = [*first, *second, *third, *fourth, *fifth, *sixth, *seventh, *eight, *ninth, *tenth,
                      *eleventh, *twelfth, *thirteen]
+    persons = [Hero(0, 7 * block_size, 32, 32, sprites[0]),
+               Tomato(15 * block_size, screen_height - 10.3 * block_size, 32, 32, "left", sprites[1])]
 
-    return Hero(0, 7 * block_size, 32, 32, sprites), total_objects
+    return persons, total_objects

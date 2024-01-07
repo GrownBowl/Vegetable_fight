@@ -17,14 +17,20 @@ hero_bullets = pygame.sprite.Group()
 
 
 def draw_background(bck):
+    """Функция отрисовки заднего фона"""
+
     screen.blit(bck, (0, 0))
 
 
 def flip_image(sprites):
+    """Функция отзеркаливания изображения"""
+
     return [pygame.transform.flip(sprite, True, False) for sprite in sprites]
 
 
 def load_block(size):
+    """Функция загрузки блоков"""
+
     path = os.path.join("assets", "Terrain.png")
     image = pygame.image.load(path).convert_alpha()
     surface = pygame.Surface((size, size), pygame.SRCALPHA, 32)
@@ -34,6 +40,8 @@ def load_block(size):
 
 
 def load_sprite_sheets(directory, width, height, flip=False):
+    """Функция загрузки отдельных кадров анимаций"""
+
     path = os.path.join("assets", directory)
     images = [f for f in os.listdir(path) if os.path.isfile(os.path.join(path, f))]
 
@@ -58,18 +66,29 @@ def load_sprite_sheets(directory, width, height, flip=False):
     return everyone_sprites
 
 
-def draw(screen, hero, objects, bullets, offset_x):
+def draw(screen, hero, persons, objects, bullets, offset_x):
+    """Функция отрисовки всего на экране"""
+
+    # Отрисовываем объекты
     for obj in objects:
         obj.draw(screen, offset_x)
 
+    # Отрисовываем пули
     for bullet in bullets.sprites():
         bullet.draw(screen, offset_x)
 
+    # Отрисовываем персонажей
+    for person in persons:
+        person.draw(screen, offset_x)
+
+    # Отрисовываем главного героя
     hero.draw(screen, offset_x)
     pygame.display.flip()
 
 
 def vertical_collision(hero, objects, dy):
+    """Функция проверки на вертикальное столковения. Возвращает все объекты, с которыми произошло столкновение"""
+
     collided_objects = []
     for obj in objects:
         if pygame.sprite.collide_mask(hero, obj):
@@ -100,20 +119,30 @@ def collide(hero, objects, dx):
     return collided_object
 
 
-def bullets_update(bullets, objects):
+def bullets_update(bullets, objects, persons):
     """Обновление позиций пуль"""
 
     for bullet in bullets.copy():
+        collide_person = collide(bullet, persons, bullet.speed)
+        if collide_person:
+            bullets.remove(bullet)
+            collide_person.hit()
+
         if collide(bullet, objects, bullet.speed):
             bullets.remove(bullet)
+
         if bullet.get_position_x() > 3000 or bullet.get_position_x() < 0:
             bullets.remove(bullet)
 
     bullets.update()
 
 
-def hero_move(hero, objects):
+def hero_move(hero, objects, persons):
     """Обновление героя, проверка на столкновения"""
+
+    for person in persons:
+        person.update_sprite()
+
     hero.loop(FPS)
     keys = pygame.key.get_pressed()
 
@@ -134,8 +163,10 @@ def main():
     running = True
 
     block_size = 48
-    hero, objects = create_first_level(block_size, WIDTH, HEIGHT, load_block(block_size),
-                                       load_sprite_sheets("hero", 32, 32, True))
+    persons, objects = create_first_level(block_size, WIDTH, HEIGHT, load_block(block_size),
+                                          load_sprite_sheets("hero", 32, 32, True),
+                                          load_sprite_sheets("tomato", 32, 32, True))
+    hero = persons.pop(0)
 
     offset_x = 0
     scroll_area_width = 200
@@ -155,14 +186,18 @@ def main():
                                                   load_sprite_sheets("bullets", 32, 32, True))
                     new_hero_bullet.add(hero_bullets)
 
-        hero_move(hero, objects)
-        bullets_update(hero_bullets, objects)
-        draw(screen, hero, objects, hero_bullets, offset_x)
+        hero_move(hero, objects, persons)
+        bullets_update(hero_bullets, objects, persons)
+        draw(screen, hero, persons, objects, hero_bullets, offset_x)
         clock.tick(FPS)
 
         if (hero.rect.right - offset_x >= WIDTH - scroll_area_width and hero.x_vel > 0) or (
                 hero.rect.left - offset_x <= scroll_area_width and hero.x_vel < 0):
             offset_x += hero.x_vel
+
+        for i in range(len(persons)):
+            if persons[i].dead:
+                persons.pop(i)
 
     pygame.quit()
     sys.exit()

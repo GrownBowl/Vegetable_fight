@@ -2,7 +2,6 @@ import pygame
 
 
 class Hero(pygame.sprite.Sprite):
-    COLOR = (255, 0, 0)
     gravity = 1
     animation_delay = 4
 
@@ -87,3 +86,36 @@ class Hero(pygame.sprite.Sprite):
     def hit_head(self):
         self.count = 0
         self.y_vel *= -1
+
+
+class Tomato(pygame.sprite.Sprite):
+    animation_delay = 4
+
+    def __init__(self, x, y, width, height, direction, sprites):
+        super().__init__()
+        self.dead = False
+        self.sprites = sprites
+        self.rect = pygame.Rect(x, y, width, height)
+        self.direction = direction
+        self.animation_count = 0
+        self.sprite = None
+        self.mask = None
+        self.update_sprite()
+
+    def hit(self):
+        self.dead = True
+
+    def update_sprite(self):
+        sprite_sheet_name = "idle" + "_" + self.direction
+        sprites = self.sprites[sprite_sheet_name]
+        sprite_index = (self.animation_count // self.animation_delay) % len(sprites)
+        self.sprite = sprites[sprite_index]
+        self.animation_count += 1
+        self.update()
+
+    def update(self):
+        self.rect = self.sprite.get_rect(topleft=(self.rect.x, self.rect.y))
+        self.mask = pygame.mask.from_surface(self.sprite)
+
+    def draw(self, screen, offset_x):
+        screen.blit(self.sprite, (self.rect.x - offset_x, self.rect.y))
