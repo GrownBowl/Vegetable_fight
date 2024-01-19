@@ -21,6 +21,12 @@ class Hero(pygame.sprite.Sprite):
         self.hit = False
         self.hit_count = 0
 
+    def make_hit(self):
+        """Метод получения урона"""
+
+        self.hp -= 1
+        self.hit = True
+
     def get_hp(self):
         """Метод возвращающий количество хп"""
 
@@ -72,7 +78,7 @@ class Hero(pygame.sprite.Sprite):
 
         if self.hit:
             self.hit_count += 1
-        if self.hit_count > fps * 2:
+        if self.hit_count > fps / 2:
             self.hit = False
             self.hit_count = 0
 
@@ -135,9 +141,9 @@ class Hero(pygame.sprite.Sprite):
 class Tomato(pygame.sprite.Sprite):
     animation_delay = 10
 
-    def __init__(self, x, y, width, height, direction, sprites):
+    def __init__(self, x, y, width, height, direction, hero_sprites):
         super().__init__()
-        self.sprites = sprites
+        self.hero_sprites = hero_sprites
         self.rect = pygame.Rect(x, y, width, height)
         self.direction = direction
         self.bullets = pygame.sprite.Group()
@@ -156,7 +162,7 @@ class Tomato(pygame.sprite.Sprite):
         """Метод обновления анимаций"""
 
         sprite_sheet_name = "tomato" + "_" + self.direction
-        sprites = self.sprites[sprite_sheet_name]
+        sprites = self.hero_sprites[sprite_sheet_name]
         sprite_index = (self.animation_count // self.animation_delay) % len(sprites)
         self.sprite = sprites[sprite_index]
         self.animation_count += 1

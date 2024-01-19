@@ -1,6 +1,8 @@
 import os
 import sys
 import pygame
+from personages import Hero
+from random import randrange
 from objects import ThornsBlock, SlowdownBlock, BoostBlock, UpDownBlock, LeftRightBlock, DropBlock
 from byllets import Bullets
 from levels import create_first_level
@@ -17,6 +19,7 @@ screen = pygame.display.set_mode(SIZE)
 clock = pygame.time.Clock()
 all_sprites = pygame.sprite.Group()
 hero_bullets = pygame.sprite.Group()
+tomato_bullets = pygame.sprite.Group()
 
 
 def terminate():
@@ -76,7 +79,7 @@ def load_sprite_sheets(directory, width, height, flip=False):
     return everyone_sprites
 
 
-def draw(screen, hero, persons, objects, bullets, offset_x, hp, drop):
+def draw(screen, hero, persons, objects, her_bullets, tomat_bullet, offset_x, hp, drop):
     """Функция отрисовки всего на экране"""
 
     # Отрисовываем объекты
@@ -86,8 +89,11 @@ def draw(screen, hero, persons, objects, bullets, offset_x, hp, drop):
             obj.update()
 
     # Отрисовываем пули
-    for bullet in bullets.sprites():
+    for bullet in her_bullets.sprites():
         bullet.draw(screen, offset_x)
+
+    for tom_bullet in tomat_bullet.sprites():
+        tom_bullet.draw(screen, offset_x)
 
     # Отрисовываем персонажей
     for person in persons:
@@ -132,35 +138,55 @@ def collide(hero, objects, dx):
     hero.update()
     collided_object = None
 
-    for obj in objects:
-        if pygame.sprite.collide_mask(hero, obj):
-            collided_object = obj
-            break
+    if type(objects) != Hero:
+        for obj in objects:
+            if pygame.sprite.collide_mask(hero, obj):
+                collided_object = obj
+                break
+
+    else:
+        if pygame.sprite.collide_mask(hero, objects):
+            collided_object = objects
 
     hero.move(-dx, 0)
     hero.update()
     return collided_object
 
 
-def bullets_update(bullets, objects, persons):
+def bullets_update(hero_bullets, tomat_bullets, objects, persons, hero):
     """Обновление позиций пуль"""
 
-    for bullet in bullets.copy():
+    for bullet in hero_bullets.copy():
         collide_person = collide(bullet, persons, bullet.speed)
         # Если пуля столкнулась с персонажем, то она удаляется
         if collide_person:
-            bullets.remove(bullet)
+            hero_bullets.remove(bullet)
             collide_person.hit()
 
         # Если пуля столкнулась с объектом на карте, то она удаляется
         if collide(bullet, objects, bullet.speed):
-            bullets.remove(bullet)
+            hero_bullets.remove(bullet)
 
         # Если пуля вышла за границы карты, то она удаляется
         if bullet.get_position_x() > 3000 or bullet.get_position_x() < 0:
-            bullets.remove(bullet)
+            hero_bullets.remove(bullet)
 
-    bullets.update()
+    for bullet in tomat_bullets.copy():
+        # Если пуля томата столкулась с главным героем,
+        # то главному герою наносится урон и пуля удяляется из общего списка
+        if collide(bullet, hero, bullet.speed):
+            hero.make_hit()
+            tomato_bullets.remove(bullet)
+
+        # Если пуля столкнулась с объектом на карте, то она удаляется
+        if collide(bullet, objects, bullet.speed):
+            tomato_bullets.remove(bullet)
+
+        # Если пуля вышла за границы карты, то она удаляется
+        if bullet.get_position_x() > 3000 or bullet.get_position_x() < 0:
+            tomato_bullets.remove(bullet)
+
+    hero_bullets.update()
 
 
 def hero_move(hero, objects, persons):
@@ -269,11 +295,17 @@ def main():
                                           hero=load_sprite_sheets("hero", 32, 32, True),
                                           tomato=load_sprite_sheets("tomato", 32, 32, True))
     hero = persons.pop(0)
+    tomato = persons[0]
 
     offset_x = 0
     scroll_area_width = 200
 
     while running:
+        if randrange(100) == 55 and not tomato.dead:
+            new_tomato_bullet = Bullets(screen, tomato, tomato.direction, offset_x,
+                                        load_sprite_sheets("bullets", 32, 32, True), "tomat_pellet_")
+            new_tomato_bullet.add(tomato_bullets)
+
         # Отрисовываем задний фон
         draw_background(bck)
 
@@ -295,9 +327,9 @@ def main():
 
         hero_move(hero, objects, persons)
         # Обновляем созданные пули
-        bullets_update(hero_bullets, objects, persons)
+        bullets_update(hero_bullets, tomato_bullets, objects, persons, hero)
         # Отрисовываем все объекты
-        draw(screen, hero, persons, objects, hero_bullets, offset_x, hp, drop)
+        draw(screen, hero, persons, objects, hero_bullets, tomato_bullets, offset_x, hp, drop)
         clock.tick(FPS)
         # Обновляем счётчик времени
         TIME_COUNT += 1
