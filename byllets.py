@@ -35,3 +35,21 @@ class Bullets(pygame.sprite.Sprite):
 
     def draw(self, screen, offset_x):
         screen.blit(self.sprite, (self.rect.x - offset_x, self.rect.y))
+
+
+class BroccoliBullet(Bullets):
+    up_fall_count = 0
+
+    def update(self):
+        if self.direction == "left":
+            if self.up_fall_count < 70:
+                self.rect = self.rect.move(-1, -2)
+            else:
+                self.rect = self.rect.move(-1, 2)
+
+            self.up_fall_count += 1
+        else:
+            self.rect.x += self.speed
+
+        self.rect = self.sprite.get_rect(topleft=(self.rect.x, self.rect.y))
+        self.mask = pygame.mask.from_surface(self.sprite)

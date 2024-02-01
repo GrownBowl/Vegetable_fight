@@ -1,8 +1,9 @@
 from objects import WoodBlock, ThornsBlock, UpDownBlock, DropBlock
-from personages import Hero, Tomato
+from personages import Hero, Tomato, Broccoli, Pumpkin, Eggplant
 
 
-def create_first_level(block_size, screen_width, screen_height, woods, thorns, up_down, drop, hero, tomato):
+def create_first_level(block_size, screen_width, screen_height, woods, thorns, up_down, drop, hero, tomato, pumpkin,
+                       eggplant, broccoli=None):
     """Функция возвращающая все объекты первого уровня"""
 
     first = [WoodBlock(i * block_size, screen_height - 6 * block_size, block_size, woods) for i in range(12)]
@@ -31,6 +32,9 @@ def create_first_level(block_size, screen_width, screen_height, woods, thorns, u
     total_objects = [*first, *second, *third, *fourth, *fifth, *sixth, *seventh, *eight, *ninth, *tenth,
                      *eleventh, *twelfth, *thirteen, *thorns_obj, *up_down_obj, *drop_obj]
     persons = [Hero(0, 7 * block_size, 32, 32, hero),
-               Tomato(15 * block_size, screen_height - 10.3 * block_size, 32, 32, "left", tomato)]
+               Tomato(15 * block_size, screen_height - 10.3 * block_size, 32, 32, "left", tomato),
+               Pumpkin(31.5 * block_size, screen_height - 8.3 * block_size, 32, 32, "right", pumpkin, 2 * block_size),
+               Eggplant(22.5 * block_size, screen_height - 7 * block_size, 32, 32, "up", eggplant, 3 * block_size),
+               Broccoli(40 * block_size, screen_height - 11.3 * block_size, 32, 32, "left", broccoli)]
 
     return persons, total_objects

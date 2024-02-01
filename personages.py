@@ -20,6 +20,8 @@ class Hero(pygame.sprite.Sprite):
         self.hp = 3
         self.hit = False
         self.hit_count = 0
+        self.collide_with_pumpkin = False
+        self.collide_with_eggplant = False
 
     def make_hit(self):
         """Метод получения урона"""
@@ -146,7 +148,6 @@ class Tomato(pygame.sprite.Sprite):
         self.hero_sprites = hero_sprites
         self.rect = pygame.Rect(x, y, width, height)
         self.direction = direction
-        self.bullets = pygame.sprite.Group()
         self.animation_count = 0
         self.sprite = None
         self.mask = None
@@ -178,3 +179,88 @@ class Tomato(pygame.sprite.Sprite):
         """Метод отрисовки персонажа"""
 
         screen.blit(self.sprite, (self.rect.x - offset_x, self.rect.y))
+
+
+class Pumpkin(Tomato):
+    animation_delay = 5
+
+    def __init__(self, x, y, width, height, direction, hero_sprites, traveling_distance):
+        self.first_x = x
+        self.traveling_distance = traveling_distance
+        self.direct = 1
+        super().__init__(x, y, width, height, direction, hero_sprites)
+
+    def update_sprite(self):
+        """Метод обновления анимаций"""
+
+        sprite_sheet_name = "run" + "_" + self.direction
+        sprites = self.hero_sprites[sprite_sheet_name]
+        sprite_index = (self.animation_count // self.animation_delay) % len(sprites)
+        self.sprite = sprites[sprite_index]
+        self.animation_count += 1
+        self.update()
+
+    def update(self):
+        """Метод обновления персонажа"""
+
+        if self.first_x == self.rect.x + self.traveling_distance:
+            self.direct = 2
+            self.direction = "right"
+        elif self.rect.x == self.first_x + self.traveling_distance:
+            self.direct = -2
+            self.direction = "left"
+
+        self.rect = self.rect.move(self.direct, 0)
+        self.rect = self.sprite.get_rect(topleft=(self.rect.x, self.rect.y))
+        self.mask = pygame.mask.from_surface(self.sprite)
+
+
+class Eggplant(Tomato):
+    animation_delay = 3
+
+    def __init__(self, x, y, width, height, direction, hero_sprites, traveling_distance):
+        self.first_y = y
+        self.traveling_distance = traveling_distance
+        self.direct = 4
+        super().__init__(x, y, width, height, direction, hero_sprites)
+
+    def update_sprite(self):
+        """Метод обновления анимаций"""
+
+        sprite_sheet_name = self.direction
+        sprites = self.hero_sprites[sprite_sheet_name]
+        sprite_index = (self.animation_count // self.animation_delay) % len(sprites)
+        self.sprite = sprites[sprite_index]
+        self.animation_count += 1
+        self.update()
+
+    def update(self):
+        """Метод обновления персонажа"""
+
+        if self.first_y == self.rect.y + self.traveling_distance:
+            self.direct = 4
+            self.direction = "down"
+        elif self.rect.y == self.first_y + self.traveling_distance:
+            self.direct = -4
+            self.direction = "up"
+
+        self.rect = self.rect.move(0, self.direct)
+        self.rect = self.sprite.get_rect(topleft=(self.rect.x, self.rect.y))
+        self.mask = pygame.mask.from_surface(self.sprite)
+
+
+class Broccoli(Tomato):
+    hp = 5
+
+    def hit(self):
+        self.hp -= 1
+
+    def update_sprite(self):
+        """Метод обновления анимаций"""
+
+        sprite_sheet_name = "idle" + "_" + self.direction
+        sprites = self.hero_sprites[sprite_sheet_name]
+        sprite_index = (self.animation_count // self.animation_delay) % len(sprites)
+        self.sprite = sprites[sprite_index]
+        self.animation_count += 1
+        self.update()
