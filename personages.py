@@ -187,7 +187,7 @@ class Pumpkin(Tomato):
     def __init__(self, x, y, width, height, direction, hero_sprites, traveling_distance):
         self.first_x = x
         self.traveling_distance = traveling_distance
-        self.direct = 1
+        self.direct = 2
         super().__init__(x, y, width, height, direction, hero_sprites)
 
     def update_sprite(self):
@@ -266,3 +266,7 @@ class Broccoli(Tomato):
         self.sprite = sprites[sprite_index]
         self.animation_count += 1
         self.update()
+
+
+class Onion(Pumpkin):
+    pass

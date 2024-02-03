@@ -3,9 +3,9 @@ import sqlite3
 import sys
 import pygame
 import pygame_gui
-from personages import Hero, Pumpkin, Eggplant
+from personages import Hero, Pumpkin, Eggplant, Onion
 from random import randrange
-from objects import ThornsBlock, SlowdownBlock, BoostBlock, UpDownBlock, LeftRightBlock, DropBlock, FinishBlock
+from objects import ThornsBlock, SlowdownBlock, BoostBlock, UpDownBlock, LeftRightBlock, DropBlock, FinishBlock, Hp
 from byllets import Bullets, BroccoliBullet
 from levels import create_first_level, create_second_level
 
@@ -28,6 +28,7 @@ def get_count_collected_drop() -> int:
 
 
 # Инициализация pygame и констант
+pygame.mixer.pre_init()
 pygame.init()
 pygame.display.set_caption("VegetableFight")
 FPS = 60
@@ -44,6 +45,19 @@ all_sprites = pygame.sprite.Group()
 hero_bullets = pygame.sprite.Group()
 tomato_bullets = pygame.sprite.Group()
 broccoli_bullets = pygame.sprite.Group()
+
+dead_sound = pygame.mixer.Sound("sounds/dead.ogg")
+dead_sound.set_volume(0.1)
+hit_sound = pygame.mixer.Sound("sounds/hit.ogg")
+hit_sound.set_volume(0.1)
+kill_sound = pygame.mixer.Sound("sounds/kill.ogg")
+kill_sound.set_volume(0.4)
+picked_sound = pygame.mixer.Sound("sounds/picked.ogg")
+picked_sound.set_volume(0.3)
+shoot_sound = pygame.mixer.Sound("sounds/shoot.ogg")
+shoot_sound.set_volume(0.1)
+win_sound = pygame.mixer.Sound("sounds/win.ogg")
+win_sound.set_volume(0.1)
 
 
 def terminate():
@@ -147,7 +161,7 @@ def vertical_collision(hero, objects, dy):
     collided_objects = []
     for obj in objects:
         # Если объект не капелька, то проверяем столкновение
-        if type(obj) != DropBlock:
+        if type(obj) != DropBlock and type(obj) != Hp:
             if pygame.sprite.collide_mask(hero, obj):
                 if dy > 0:
                     hero.rect.bottom = obj.rect.top
@@ -189,6 +203,7 @@ def bullets_update(hero_bullets, tomat_bullets, broc_bullets, objects, persons, 
         # Если пуля столкнулась с персонажем, то она удаляется
         if collide_person:
             hero_bullets.remove(bullet)
+            kill_sound.play()
             collide_person.hit()
 
         # Если пуля столкнулась с объектом на карте, то она удаляется
@@ -203,6 +218,7 @@ def bullets_update(hero_bullets, tomat_bullets, broc_bullets, objects, persons, 
         # Если пуля томата столкулась с главным героем,
         # то главному герою наносится урон и пуля удяляется из общего списка
         if collide(bullet, hero, bullet.speed):
+            hit_sound.play()
             hero.make_hit()
             tomato_bullets.remove(bullet)
 
@@ -216,6 +232,7 @@ def bullets_update(hero_bullets, tomat_bullets, broc_bullets, objects, persons, 
 
     for bullet in broc_bullets.copy():
         if collide(bullet, hero, bullet.speed):
+            hit_sound.play()
             hero.make_hit()
             broccoli_bullets.remove(bullet)
 
@@ -263,16 +280,33 @@ def hero_move(hero, objects, persons):
 
     # Если персонаж столкнулся с капелькой, то обновляем счетчик собранных капель. Обнуляем объекты
     if type(collide_left) == DropBlock:
+        picked_sound.play()
         DROP_COUNT += 1
-        ind_drop = objects.index(collide_left)
-        objects.pop(ind_drop)
+        ind_hp = objects.index(collide_left)
+        objects.pop(ind_hp)
         drops_id.append(collide_left.get_id())
         collide_left = None
     if type(collide_right) == DropBlock:
+        picked_sound.play()
         DROP_COUNT += 1
-        ind_drop = objects.index(collide_right)
-        objects.pop(ind_drop)
+        ind_hp = objects.index(collide_right)
+        objects.pop(ind_hp)
         drops_id.append(collide_right.get_id())
+        collide_right = None
+
+    if type(collide_left) == Hp:
+        if hero.get_hp() < 3:
+            picked_sound.play()
+            hero.hp += 1
+            ind_hp = objects.index(collide_left)
+            objects.pop(ind_hp)
+        collide_left = None
+    if type(collide_right) == Hp:
+        if hero.get_hp() < 3:
+            picked_sound.play()
+            hero.hp += 1
+            ind_hp = objects.index(collide_right)
+            objects.pop(ind_hp)
         collide_right = None
 
     # Передвигаем персонажа, если он не пересекается с другими объектами
@@ -299,22 +333,33 @@ def hero_move(hero, objects, persons):
             HERO_SPEED = 8
         elif obj and type(obj) == FinishBlock:
             mark_collected_drops()
+            pygame.mixer.music.stop()
+            win_sound.play()
             second_screen(False)
 
     if type(collide_persons) == Pumpkin and not hero.collide_with_pumpkin:
+        hit_sound.play()
         hero.make_hit()
         hero.collide_with_pumpkin = True
     if type(collide_persons) != Pumpkin and hero.collide_with_pumpkin:
         hero.collide_with_pumpkin = False
 
     if type(collide_persons) == Eggplant and not hero.collide_with_eggplant:
+        hit_sound.play()
         hero.make_hit()
         hero.collide_with_eggplant = True
     if type(collide_persons) != Eggplant and hero.collide_with_eggplant:
         hero.collide_with_eggplant = False
 
+    if type(collide_persons) == Onion:
+        TIME_COUNT = 0
+        HERO_SPEED = 2
+
 
 def start_screen() -> int:
+    pygame.mixer.music.load("sounds/main_menu.ogg")
+    pygame.mixer.music.play(-1)
+    pygame.mixer.music.set_volume(0.1)
     """Функция, запускающая стартовый экран"""
     global LEVEL
 
@@ -353,9 +398,11 @@ def start_screen() -> int:
                 if event.user_type == pygame_gui.UI_BUTTON_PRESSED:
                     if event.ui_element == first_level_button:
                         LEVEL = 1
+                        pygame.mixer.music.stop()
                         return 1
                     if event.ui_element == second_level_button:
                         LEVEL = 2
+                        pygame.mixer.music.stop()
                         return 2
 
             manager.process_events(event)
@@ -412,6 +459,13 @@ def second_screen(die_menu):
 
 
 def run_level(bck, hp, drop, personages, objects, lvl):
+    global HERO_SPEED, TIME_COUNT, DROP_COUNT
+
+    pygame.mixer.music.load("sounds/game_back.ogg")
+    pygame.mixer.music.play(-1)
+    pygame.mixer.music.set_volume(0.04)
+
+    HERO_SPEED = 5
     tomato = None
     broccoli = None
     running = True
@@ -425,6 +479,7 @@ def run_level(bck, hp, drop, personages, objects, lvl):
     scroll_area_width = 200
 
     while running:
+        TIME_COUNT += 1
         if lvl != 2 and randrange(100) == 55 and not tomato.dead and lvl == 1:
             new_tomato_bullet = Bullets(screen, tomato, tomato.direction, offset_x,
                                         load_sprite_sheets("bullets", 32, 32, True), "tomat_pellet_")
@@ -450,6 +505,7 @@ def run_level(bck, hp, drop, personages, objects, lvl):
 
                 # Если нажата кнопка s, то создаётся пуля
                 if event.key == pygame.K_s:
+                    shoot_sound.play()
                     new_hero_bullet = Bullets(screen, hero, hero.direction, offset_x,
                                               load_sprite_sheets("bullets", 32, 32, True), "potato_pellet_")
                     new_hero_bullet.add(hero_bullets)
@@ -465,17 +521,26 @@ def run_level(bck, hp, drop, personages, objects, lvl):
                 hero.rect.left - offset_x <= scroll_area_width and hero.x_vel < 0):
             offset_x += hero.x_vel
 
+        if TIME_COUNT == 250:
+            HERO_SPEED = 5
+
         for pers in personages:
             if pers.dead:
                 personages.remove(pers)
 
         if hero.get_position()[1] > WIDTH:
+            pygame.mixer.music.stop()
+            dead_sound.play()
             clock.tick(0.7)
+            DROP_COUNT = get_count_collected_drop()
             second_screen(True)
 
         # Если у персонажа закончились хп, то запускаем главный экран
         if hero.get_hp() < 1:
+            pygame.mixer.music.stop()
+            dead_sound.play()
             clock.tick(1)
+            DROP_COUNT = get_count_collected_drop()
             second_screen(True)
 
     terminate()
@@ -502,7 +567,9 @@ def main(level_num: int):
                                               tomato=load_sprite_sheets("tomato", 32, 32, True),
                                               pumpkin=load_sprite_sheets("pumpkin", 32, 32, True),
                                               eggplant=load_sprite_sheets("eggplant", 32, 32, False),
-                                              broccoli=load_sprite_sheets("broccoli", 32, 32, True))
+                                              broccoli=load_sprite_sheets("broccoli", 32, 32, True),
+                                              onion=load_sprite_sheets("onion", 160, 64, True),
+                                              hp=pygame.transform.scale(load_block(block_size, "heart.png"), (32, 32)))
         run_level(bck, hp, drop, persons, objects, 1)
 
     if level_num == 2:

@@ -1,10 +1,10 @@
 import sqlite3
-from objects import WoodBlock, ThornsBlock, UpDownBlock, DropBlock, FinishBlock
-from personages import Hero, Tomato, Broccoli, Pumpkin, Eggplant
+from objects import WoodBlock, ThornsBlock, UpDownBlock, DropBlock, FinishBlock, Hp
+from personages import Hero, Tomato, Broccoli, Pumpkin, Eggplant, Onion
 
 
 def create_first_level(block_size, screen_width, screen_height, woods, thorns, up_down, drop, hero, tomato, pumpkin,
-                       eggplant, broccoli=None):
+                       eggplant, broccoli, onion, hp):
     """Функция возвращающая все объекты первого уровня"""
     # Подключение к БД
     con = sqlite3.connect("database/date.sqlite3")
@@ -46,13 +46,15 @@ def create_first_level(block_size, screen_width, screen_height, woods, thorns, u
                                     ThornsBlock(43 * block_size, 9 * block_size, block_size, thorns)]
     up_down_obj = [UpDownBlock(54 * block_size, screen_height - 1 * block_size, block_size, up_down, 7 * block_size)]
     finish = [FinishBlock(57 * block_size, screen_height - 9 * block_size, block_size, woods)]
+    hp_obj = [Hp(8 * block_size, screen_height - 12 * block_size, block_size, hp)]
     total_objects = [*first, *second, *third, *fourth, *fifth, *sixth, *seventh, *eight, *ninth, *tenth,
-                     *eleventh, *twelfth, *thirteen, *thorns_obj, *up_down_obj, *drop_obj, *finish]
+                     *eleventh, *twelfth, *thirteen, *thorns_obj, *up_down_obj, *drop_obj, *finish, *hp_obj]
     persons = [Hero(0, 7 * block_size, 32, 32, hero),
                Tomato(15 * block_size, screen_height - 10.3 * block_size, 32, 32, "left", tomato),
                Pumpkin(31.5 * block_size, screen_height - 8.3 * block_size, 32, 32, "right", pumpkin, 2 * block_size),
                Eggplant(22.5 * block_size, screen_height - 7 * block_size, 32, 32, "up", eggplant, 3 * block_size),
-               Broccoli(40 * block_size, screen_height - 11.3 * block_size, 32, 32, "left", broccoli)]
+               Broccoli(40 * block_size, screen_height - 11.3 * block_size, 32, 32, "left", broccoli),
+               Onion(45 * block_size, screen_height - 3.7 * block_size, 160, 64, "left", onion, 1 * block_size)]
 
     return persons, total_objects
 

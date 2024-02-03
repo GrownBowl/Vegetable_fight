@@ -89,3 +89,7 @@ class DropBlock(WoodBlock):
 
 class FinishBlock(WoodBlock):
     pass
+
+
+class Hp(WoodBlock):
+    pass
