@@ -79,4 +79,13 @@ class BoostBlock(WoodBlock):
 
 # Класс капельки
 class DropBlock(WoodBlock):
+    def __init__(self, x, y, size, block, id):
+        self.id = id
+        super().__init__(x, y, size, block)
+
+    def get_id(self):
+        return self.id
+
+
+class FinishBlock(WoodBlock):
     pass

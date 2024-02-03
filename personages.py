@@ -11,7 +11,7 @@ class Hero(pygame.sprite.Sprite):
         self.rect = pygame.Rect(x, y, width, height)
         self.x_vel = 0
         self.y_vel = 0
-        self.direction = "left"
+        self.direction = "right"
         self.animation_count = 0
         self.fall_count = 0
         self.jump_count = 0
@@ -250,10 +250,12 @@ class Eggplant(Tomato):
 
 
 class Broccoli(Tomato):
-    hp = 5
+    hp = 3
 
     def hit(self):
         self.hp -= 1
+        if self.hp == 0:
+            self.dead = True
 
     def update_sprite(self):
         """Метод обновления анимаций"""
