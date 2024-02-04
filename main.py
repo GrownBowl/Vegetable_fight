@@ -21,7 +21,6 @@ def get_count_collected_drop() -> int:
     con.close()
 
     for elem in result:
-        print(elem)
         if elem[0]:
             count += 1
     return count
@@ -46,6 +45,7 @@ hero_bullets = pygame.sprite.Group()
 tomato_bullets = pygame.sprite.Group()
 broccoli_bullets = pygame.sprite.Group()
 
+# Инициализация звуковых эффектов
 dead_sound = pygame.mixer.Sound("sounds/dead.ogg")
 dead_sound.set_volume(0.1)
 hit_sound = pygame.mixer.Sound("sounds/hit.ogg")
@@ -136,7 +136,7 @@ def draw(screen, hero, persons, objects, her_bullets, tomat_bullet, broc_bullet,
     for br_bullet in broc_bullet.sprites():
         br_bullet.draw(screen, offset_x)
 
-    # Отрисовываем персонажей
+    # Отрисовываем персонажей, если он жив
     for person in persons:
         if not person.dead:
             person.draw(screen, offset_x)
@@ -231,14 +231,18 @@ def bullets_update(hero_bullets, tomat_bullets, broc_bullets, objects, persons, 
             tomato_bullets.remove(bullet)
 
     for bullet in broc_bullets.copy():
+        # Если пуля брокколи столкулась с главным героем,
+        # то главному герою наносится урон и пуля удяляется из общего списка
         if collide(bullet, hero, bullet.speed):
             hit_sound.play()
             hero.make_hit()
             broccoli_bullets.remove(bullet)
 
+        # Если пуля столкнулась с объектом на карте, то она удаляется
         if collide(bullet, objects, bullet.speed):
             broccoli_bullets.remove(bullet)
 
+        # Если пуля вышла за границы карты, то она удаляется
         if bullet.get_position_x() > 3000 or bullet.get_position_x() < 0:
             broccoli_bullets.remove(bullet)
 
@@ -251,7 +255,7 @@ def mark_collected_drops():
     # Создание курсора
     cur = con.cursor()
     for id_drop in drops_id:
-        # Выполнение запроса и получение всех результатов
+        # Выполнение запроса, заполняем собранные капельки
         cur.execute("""
         UPDATE drops
         SET collected = 1
@@ -294,6 +298,7 @@ def hero_move(hero, objects, persons):
         drops_id.append(collide_right.get_id())
         collide_right = None
 
+    # Если персонаж столкнулся с хп, то добавляем хп если их меньше 3-х. Обнуляем объекты
     if type(collide_left) == Hp:
         if hero.get_hp() < 3:
             picked_sound.play()
@@ -331,51 +336,66 @@ def hero_move(hero, objects, persons):
         elif obj and type(obj) == BoostBlock:
             TIME_COUNT = 0
             HERO_SPEED = 8
+        # Или же с блоком финиша, то запускаем звук и меню победы
         elif obj and type(obj) == FinishBlock:
             mark_collected_drops()
             pygame.mixer.music.stop()
             win_sound.play()
             second_screen(False)
 
+    # Если персонаж столкнулся с тыквой и до этого не сталкивался, то запускаем звук урона и наносим урон персонажу
     if type(collide_persons) == Pumpkin and not hero.collide_with_pumpkin:
         hit_sound.play()
         hero.make_hit()
         hero.collide_with_pumpkin = True
+    # Если персонаж столкнулся не с тыквой, то collide_with_pumpkin ставим лож
     if type(collide_persons) != Pumpkin and hero.collide_with_pumpkin:
         hero.collide_with_pumpkin = False
 
+    # Если персонаж столкнулся с баклажаном и до этого не сталкивался, то запускаем звук урона и наносим урон персонажу
     if type(collide_persons) == Eggplant and not hero.collide_with_eggplant:
         hit_sound.play()
         hero.make_hit()
         hero.collide_with_eggplant = True
+    # Если персонаж столкнулся не с баклажаном, то collide_with_pumpkin ставим лож
     if type(collide_persons) != Eggplant and hero.collide_with_eggplant:
         hero.collide_with_eggplant = False
 
+    # Если перосонаж столкнулся с луком, то уменьшаем скорость, счётчик времени ставим 0
     if type(collide_persons) == Onion:
         TIME_COUNT = 0
         HERO_SPEED = 2
 
 
 def start_screen() -> int:
+    """Функция, запускающая стартовый экран"""
+
+    global LEVEL
+    # Заргужаем фоновый звук, проигрываем его
     pygame.mixer.music.load("sounds/main_menu.ogg")
     pygame.mixer.music.play(-1)
     pygame.mixer.music.set_volume(0.1)
-    """Функция, запускающая стартовый экран"""
-    global LEVEL
 
+    # Загружаем фон, ставим цвет
     background = pygame.Surface(SIZE)
+    background.fill(pygame.Color("#4C6FC9"))
+
+    # Заргужаем шрифт, ставим текст
     name_font = pygame.font.Font("fonts/JotiOne-Regular.ttf", 48)
     name_text = name_font.render("Vegetable fight", 1, (255, 255, 255))
 
-    background.fill(pygame.Color("#4C6FC9"))
-
+    # Инициализируем UIManager
     manager = pygame_gui.UIManager(SIZE, "theme.json")
+
+    # Делаем текст
     text = pygame.font.Font(None, 36).render("Выберите уровень", 1, (255, 255, 255))
 
+    # Создаём три кнопки
     first_level_button = pygame_gui.elements.UIButton(
         relative_rect=pygame.Rect((160, 460), (250, 100)),
         text="1 level",
-        manager=manager)
+        manager=manager
+    )
 
     second_level_button = pygame_gui.elements.UIButton(
         relative_rect=pygame.Rect((515, 460), (250, 100)),
@@ -389,23 +409,27 @@ def start_screen() -> int:
         manager=manager
     )
 
+    # Основной цикл
     while True:
         time_delta = clock.tick(FPS) / 1000.0
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 terminate()
+            # Если нажата кнопка "1 level" запускаем первый лвл, останавливаем фоновую музыку
             if event.type == pygame.USEREVENT:
                 if event.user_type == pygame_gui.UI_BUTTON_PRESSED:
                     if event.ui_element == first_level_button:
                         LEVEL = 1
                         pygame.mixer.music.stop()
                         return 1
+                    # Если нажата кнопка "2 level" запускаем второй лвл, останавливаем фоновую музыку
                     if event.ui_element == second_level_button:
                         LEVEL = 2
                         pygame.mixer.music.stop()
                         return 2
 
             manager.process_events(event)
+        # Обновляем менеджер и отрисовываем текст
         manager.update(time_delta)
         screen.blit(background, (0, 0))
         screen.blit(name_text, (449, 231))
@@ -415,16 +439,24 @@ def start_screen() -> int:
 
 
 def second_screen(die_menu):
+    """Функция отображающее меню проигрыша (die_menu = True), и меню выигрыша (die_menu = False)"""
+
+    # Загружаем фон, ставим цвет
     background = pygame.Surface(SIZE)
+    background.fill(pygame.Color("#D63535" if die_menu else "#41BA17"))
+
+    # Загружаем шрифт, ставим текст
     name_text = pygame.font.Font("fonts/Roboto_bolt.ttf", 64).render("ВЫ ПРОИГРАЛИ!" if die_menu else "ВЫ ВЫИГРАЛИ!",
                                                                      1, (255, 255, 255))
 
-    background.fill(pygame.Color("#D63535" if die_menu else "#41BA17"))
-
+    # Инициализируем UImanager
     manager = pygame_gui.UIManager(SIZE, "theme2.json")
+
+    # Ставим дополнительный текст
     text1 = pygame.font.Font("fonts/Roboto.ttf", 32).render("Начать уровень заново", 1, (255, 255, 255))
     text2 = pygame.font.Font("fonts/Roboto.ttf", 32).render("Выйти в главное меню", 1, (255, 255, 255))
 
+    # Создаём две кнопки
     again_button = pygame_gui.elements.UIButton(
         relative_rect=pygame.Rect((340, 390), (150, 100)),
         text="1",
@@ -436,6 +468,7 @@ def second_screen(die_menu):
         manager=manager
     )
 
+    # Основной цикл
     while True:
         time_delta = clock.tick(FPS) / 1000.0
         for event in pygame.event.get():
@@ -443,12 +476,16 @@ def second_screen(die_menu):
                 terminate()
             if event.type == pygame.USEREVENT:
                 if event.user_type == pygame_gui.UI_BUTTON_PRESSED:
+                    # Если нажата кнопка "начать заново", то запускаем уровень заново
                     if event.ui_element == again_button:
                         main(LEVEL)
+                    # Если нажата кнопка "выйти в главное меню", то запускаем главное меню
+
                     if event.ui_element == main_menu_button:
                         main(start_screen())
 
             manager.process_events(event)
+        # Обновляем менеджер и отрисовываем текст
         manager.update(time_delta)
         screen.blit(background, (0, 0))
         screen.blit(name_text, (385, 110))
@@ -461,11 +498,14 @@ def second_screen(die_menu):
 def run_level(bck, hp, drop, personages, objects, lvl):
     global HERO_SPEED, TIME_COUNT, DROP_COUNT
 
+    # загружаем и проигрываем музыку
     pygame.mixer.music.load("sounds/game_back.ogg")
     pygame.mixer.music.play(-1)
     pygame.mixer.music.set_volume(0.04)
 
     HERO_SPEED = 5
+
+    # Инициализируем необходимых персонажей
     tomato = None
     broccoli = None
     running = True
@@ -479,12 +519,15 @@ def run_level(bck, hp, drop, personages, objects, lvl):
     scroll_area_width = 200
 
     while running:
+        # Обновляем счётчик времени
         TIME_COUNT += 1
+        # Если уровень не второй и томат жив, и случайное число равно 55, то генерируем новую пулю
         if lvl != 2 and randrange(100) == 55 and not tomato.dead and lvl == 1:
             new_tomato_bullet = Bullets(screen, tomato, tomato.direction, offset_x,
                                         load_sprite_sheets("bullets", 32, 32, True), "tomat_pellet_")
             new_tomato_bullet.add(tomato_bullets)
 
+        # Если уровень не второй и брокколи жив, и случайное число равно 38, то генерируем новую пулю
         if lvl != 2 and randrange(100) == 38 and not broccoli.dead:
             new_brocoli_bullet = BroccoliBullet(screen, broccoli, broccoli.direction, offset_x,
                                                 load_sprite_sheets("bullets", 32, 32, True), "broccoli_pellet_")
@@ -517,17 +560,21 @@ def run_level(bck, hp, drop, personages, objects, lvl):
         draw(screen, hero, personages, objects, hero_bullets, tomato_bullets, broccoli_bullets, offset_x, hp, drop)
         clock.tick(FPS)
 
+        # Обновление камеры
         if (hero.rect.right - offset_x >= WIDTH - scroll_area_width and hero.x_vel > 0) or (
                 hero.rect.left - offset_x <= scroll_area_width and hero.x_vel < 0):
             offset_x += hero.x_vel
 
+        # Если счётчик времени равен 250, то ставим обычную скорость
         if TIME_COUNT == 250:
             HERO_SPEED = 5
 
+        # Если персонаж умер, то удаляем его из списка
         for pers in personages:
             if pers.dead:
                 personages.remove(pers)
 
+        # Если персонаж находится ниже экрана, то он проигрывает
         if hero.get_position()[1] > WIDTH:
             pygame.mixer.music.stop()
             dead_sound.play()
