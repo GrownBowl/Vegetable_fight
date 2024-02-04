@@ -3,11 +3,10 @@
      {
          "colours":
          {
-             "normal_bg":"#4872DD",
-             "hovered_bg":"#35393e",
-             "disabled_bg":"#25292e",
-             "selected_bg":"#193754",
-             "active_bg":"#193754",
+             "normal_bg":"#B48AD0",
+             "hovered_bg":"#67457D",
+             "selected_bg":"#4A2761",
+             "active_bg":"#4A2761",
              "dark_bg":"#15191e",
              "normal_text":"#FFF",
              "hovered_text":"#FFFFFF",
@@ -26,7 +25,7 @@
          "misc":
          {
              "shape": "rounded_rectangle",
-             "shape_corner_radius": "30",
+             "shape_corner_radius": "20",
              "tool_tip_delay": "1.5",
              "border_width": "0"
          }

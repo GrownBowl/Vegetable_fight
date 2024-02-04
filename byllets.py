@@ -2,10 +2,11 @@ import pygame
 
 
 class Bullets(pygame.sprite.Sprite):
-    def __init__(self, screen, hero, direction, offset_x, sprites, name_bullets):
+    def __init__(self, screen, hero, direction, offset_x, offset_y, sprites, name_bullets):
         super().__init__()
         self.sprites = sprites
         self.offset_x = offset_x
+        self.offset_y = offset_y
         self.screen = screen
         self.rect = pygame.Rect(0, 0, 32, 32)
         self.speed = 4
@@ -33,8 +34,8 @@ class Bullets(pygame.sprite.Sprite):
         self.rect = self.sprite.get_rect(topleft=(self.rect.x, self.rect.y))
         self.mask = pygame.mask.from_surface(self.sprite)
 
-    def draw(self, screen, offset_x):
-        screen.blit(self.sprite, (self.rect.x - offset_x, self.rect.y))
+    def draw(self, screen, offset_x, offset_y):
+        screen.blit(self.sprite, (self.rect.x - offset_x, self.rect.y - offset_y))
 
 
 class BroccoliBullet(Bullets):

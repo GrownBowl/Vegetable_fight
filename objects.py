@@ -11,10 +11,10 @@ class Object(pygame.sprite.Sprite):
         self.height = height
         self.name = name
 
-    def draw(self, screen, offset_x):
+    def draw(self, screen, offset_x, offset_y):
         """Метод отрисовки объекта"""
 
-        screen.blit(self.image, (self.rect.x - offset_x, self.rect.y))
+        screen.blit(self.image, (self.rect.x - offset_x, self.rect.y - offset_y))
 
 
 # Класс деревяшек

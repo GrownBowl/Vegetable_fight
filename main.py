@@ -8,6 +8,7 @@ from random import randrange
 from objects import ThornsBlock, SlowdownBlock, BoostBlock, UpDownBlock, LeftRightBlock, DropBlock, FinishBlock, Hp
 from byllets import Bullets, BroccoliBullet
 from levels import create_first_level, create_second_level
+from pygame_gui.core import ObjectID
 
 
 def get_count_collected_drop() -> int:
@@ -29,11 +30,15 @@ def get_count_collected_drop() -> int:
 # Инициализация pygame и констант
 pygame.mixer.pre_init()
 pygame.init()
+icon = pygame.image.load("assets/logo.png")
 pygame.display.set_caption("VegetableFight")
+pygame.display.set_icon(icon)
 FPS = 60
 SIZE = WIDTH, HEIGHT = 1280, 720
 HERO_SPEED = 5
 TIME_COUNT = 0
+BULLET_TIME_COUNT = 0
+SHOOT_COUNT = 0
 DROP_COUNT = get_count_collected_drop()
 LEVEL = 0
 drops_id = []
@@ -117,32 +122,32 @@ def load_sprite_sheets(directory, width, height, flip=False):
     return everyone_sprites
 
 
-def draw(screen, hero, persons, objects, her_bullets, tomat_bullet, broc_bullet, offset_x, hp, drop):
+def draw(screen, hero, persons, objects, her_bullets, tomat_bullet, broc_bullet, offset_x, offset_y, hp, drop):
     """Функция отрисовки всего на экране"""
 
     # Отрисовываем объекты
     for obj in objects:
-        obj.draw(screen, offset_x)
+        obj.draw(screen, offset_x, offset_y)
         if type(obj) == UpDownBlock or type(obj) == LeftRightBlock:
             obj.update()
 
     # Отрисовываем пули
     for bullet in her_bullets.sprites():
-        bullet.draw(screen, offset_x)
+        bullet.draw(screen, offset_x, offset_y)
 
     for tom_bullet in tomat_bullet.sprites():
-        tom_bullet.draw(screen, offset_x)
+        tom_bullet.draw(screen, offset_x, offset_y)
 
     for br_bullet in broc_bullet.sprites():
-        br_bullet.draw(screen, offset_x)
+        br_bullet.draw(screen, offset_x, offset_y)
 
     # Отрисовываем персонажей, если он жив
     for person in persons:
         if not person.dead:
-            person.draw(screen, offset_x)
+            person.draw(screen, offset_x, offset_y)
 
     # Отрисовываем главного героя
-    hero.draw(screen, offset_x)
+    hero.draw(screen, offset_x, offset_y)
 
     # Отрисовываем хп главноого героя исходя из их количества
     for i in range(hero.get_hp()):
@@ -354,8 +359,9 @@ def hero_move(hero, objects, persons):
 
     # Если персонаж столкнулся с баклажаном и до этого не сталкивался, то запускаем звук урона и наносим урон персонажу
     if type(collide_persons) == Eggplant and not hero.collide_with_eggplant:
-        hit_sound.play()
+        dead_sound.play()
         hero.make_hit()
+        hero.die()
         hero.collide_with_eggplant = True
     # Если персонаж столкнулся не с баклажаном, то collide_with_pumpkin ставим лож
     if type(collide_persons) != Eggplant and hero.collide_with_eggplant:
@@ -376,16 +382,18 @@ def start_screen() -> int:
     pygame.mixer.music.play(-1)
     pygame.mixer.music.set_volume(0.1)
 
+    logo = pygame.transform.scale(icon, (195, 201))
+
     # Загружаем фон, ставим цвет
     background = pygame.Surface(SIZE)
-    background.fill(pygame.Color("#4C6FC9"))
+    background.fill(pygame.Color("#2838A3"))
 
     # Заргужаем шрифт, ставим текст
     name_font = pygame.font.Font("fonts/JotiOne-Regular.ttf", 48)
     name_text = name_font.render("Vegetable fight", 1, (255, 255, 255))
 
     # Инициализируем UIManager
-    manager = pygame_gui.UIManager(SIZE, "theme.json")
+    manager = pygame_gui.UIManager(SIZE, "jsons/theme.json")
 
     # Делаем текст
     text = pygame.font.Font(None, 36).render("Выберите уровень", 1, (255, 255, 255))
@@ -434,23 +442,25 @@ def start_screen() -> int:
         screen.blit(background, (0, 0))
         screen.blit(name_text, (449, 231))
         screen.blit(text, (520, 336))
+        screen.blit(logo, (533, 31))
         manager.draw_ui(screen)
         pygame.display.update()
 
 
 def second_screen(die_menu):
     """Функция отображающее меню проигрыша (die_menu = True), и меню выигрыша (die_menu = False)"""
+    logo = pygame.transform.scale(icon, (195, 201))
 
     # Загружаем фон, ставим цвет
     background = pygame.Surface(SIZE)
-    background.fill(pygame.Color("#D63535" if die_menu else "#41BA17"))
+    background.fill(pygame.Color("#D63535" if die_menu else "#487B2F"))
 
     # Загружаем шрифт, ставим текст
     name_text = pygame.font.Font("fonts/Roboto_bolt.ttf", 64).render("ВЫ ПРОИГРАЛИ!" if die_menu else "ВЫ ВЫИГРАЛИ!",
                                                                      1, (255, 255, 255))
 
     # Инициализируем UImanager
-    manager = pygame_gui.UIManager(SIZE, "theme2.json")
+    manager = pygame_gui.UIManager(SIZE, "jsons/theme2.json" if die_menu else "jsons/theme3.json")
 
     # Ставим дополнительный текст
     text1 = pygame.font.Font("fonts/Roboto.ttf", 32).render("Начать уровень заново", 1, (255, 255, 255))
@@ -459,13 +469,16 @@ def second_screen(die_menu):
     # Создаём две кнопки
     again_button = pygame_gui.elements.UIButton(
         relative_rect=pygame.Rect((340, 390), (150, 100)),
-        text="1",
-        manager=manager)
+        text="",
+        manager=manager,
+        object_id=ObjectID(class_id='button_reset', object_id='button_reset')
+    )
 
     main_menu_button = pygame_gui.elements.UIButton(
         relative_rect=pygame.Rect((790, 390), (150, 100)),
-        text="2",
-        manager=manager
+        text="",
+        manager=manager,
+        object_id=ObjectID(class_id='button_exit', object_id='button_exit')
     )
 
     # Основной цикл
@@ -480,7 +493,6 @@ def second_screen(die_menu):
                     if event.ui_element == again_button:
                         main(LEVEL)
                     # Если нажата кнопка "выйти в главное меню", то запускаем главное меню
-
                     if event.ui_element == main_menu_button:
                         main(start_screen())
 
@@ -488,15 +500,16 @@ def second_screen(die_menu):
         # Обновляем менеджер и отрисовываем текст
         manager.update(time_delta)
         screen.blit(background, (0, 0))
-        screen.blit(name_text, (385, 110))
+        screen.blit(name_text, (390, 245))
         screen.blit(text1, (227, 528))
         screen.blit(text2, (683, 528))
+        screen.blit(logo, (533, 31))
         manager.draw_ui(screen)
         pygame.display.update()
 
 
 def run_level(bck, hp, drop, personages, objects, lvl):
-    global HERO_SPEED, TIME_COUNT, DROP_COUNT
+    global HERO_SPEED, TIME_COUNT, DROP_COUNT, BULLET_TIME_COUNT, SHOOT_COUNT
 
     # загружаем и проигрываем музыку
     pygame.mixer.music.load("sounds/game_back.ogg")
@@ -514,22 +527,28 @@ def run_level(bck, hp, drop, personages, objects, lvl):
     if lvl == 1:
         tomato = personages[0]
         broccoli = personages[3]
+    if lvl == 2:
+        tomato = personages[0]
 
     offset_x = 0
+    offset_y = 0
     scroll_area_width = 200
+    scroll_area_height = 200
 
     while running:
-        # Обновляем счётчик времени
+        # Обновляем счётчики времени
         TIME_COUNT += 1
+        BULLET_TIME_COUNT += 1
+
         # Если уровень не второй и томат жив, и случайное число равно 55, то генерируем новую пулю
-        if lvl != 2 and randrange(100) == 55 and not tomato.dead and lvl == 1:
-            new_tomato_bullet = Bullets(screen, tomato, tomato.direction, offset_x,
+        if randrange(100) == 55 and not tomato.dead:
+            new_tomato_bullet = Bullets(screen, tomato, tomato.direction, offset_x, offset_y,
                                         load_sprite_sheets("bullets", 32, 32, True), "tomat_pellet_")
             new_tomato_bullet.add(tomato_bullets)
 
         # Если уровень не второй и брокколи жив, и случайное число равно 38, то генерируем новую пулю
         if lvl != 2 and randrange(100) == 38 and not broccoli.dead:
-            new_brocoli_bullet = BroccoliBullet(screen, broccoli, broccoli.direction, offset_x,
+            new_brocoli_bullet = BroccoliBullet(screen, broccoli, broccoli.direction, offset_x, offset_y,
                                                 load_sprite_sheets("bullets", 32, 32, True), "broccoli_pellet_")
             new_brocoli_bullet.add(broccoli_bullets)
 
@@ -547,9 +566,10 @@ def run_level(bck, hp, drop, personages, objects, lvl):
                     hero.jump()
 
                 # Если нажата кнопка s, то создаётся пуля
-                if event.key == pygame.K_s:
+                if event.key == pygame.K_s and SHOOT_COUNT < 3:
+                    SHOOT_COUNT += 1
                     shoot_sound.play()
-                    new_hero_bullet = Bullets(screen, hero, hero.direction, offset_x,
+                    new_hero_bullet = Bullets(screen, hero, hero.direction, offset_x, offset_y,
                                               load_sprite_sheets("bullets", 32, 32, True), "potato_pellet_")
                     new_hero_bullet.add(hero_bullets)
 
@@ -557,17 +577,24 @@ def run_level(bck, hp, drop, personages, objects, lvl):
         # Обновляем созданные пули
         bullets_update(hero_bullets, tomato_bullets, broccoli_bullets, objects, personages, hero)
         # Отрисовываем все объекты
-        draw(screen, hero, personages, objects, hero_bullets, tomato_bullets, broccoli_bullets, offset_x, hp, drop)
+        draw(screen, hero, personages, objects, hero_bullets, tomato_bullets, broccoli_bullets, offset_x, offset_y, hp, drop)
         clock.tick(FPS)
 
         # Обновление камеры
         if (hero.rect.right - offset_x >= WIDTH - scroll_area_width and hero.x_vel > 0) or (
                 hero.rect.left - offset_x <= scroll_area_width and hero.x_vel < 0):
             offset_x += hero.x_vel
+        if (hero.rect.bottom - offset_y >= HEIGHT - scroll_area_height and hero.y_vel > 0) or (
+                hero.rect.top - offset_y <= scroll_area_height and hero.y_vel < 0):
+            offset_y += hero.y_vel
 
         # Если счётчик времени равен 250, то ставим обычную скорость
         if TIME_COUNT == 250:
             HERO_SPEED = 5
+
+        if BULLET_TIME_COUNT == 270:
+            SHOOT_COUNT = 0
+            BULLET_TIME_COUNT = 0
 
         # Если персонаж умер, то удаляем его из списка
         for pers in personages:
@@ -616,16 +643,25 @@ def main(level_num: int):
                                               eggplant=load_sprite_sheets("eggplant", 32, 32, False),
                                               broccoli=load_sprite_sheets("broccoli", 32, 32, True),
                                               onion=load_sprite_sheets("onion", 160, 64, True),
-                                              hp=pygame.transform.scale(load_block(block_size, "heart.png"), (32, 32)))
+                                              hp=pygame.transform.scale(load_block(block_size, "heart.png"), (32, 32)),
+                                              finish=load_block(block_size, "finish.png"))
         run_level(bck, hp, drop, persons, objects, 1)
 
     if level_num == 2:
         persons, objects = create_second_level(block_size, WIDTH, HEIGHT,
-                                               load_block(block_size, "wood.png"),
-                                               load_block(block_size, "up_down.png"),
-                                               load_sprite_sheets("hero", 32, 32, True),
-                                               load_sprite_sheets("tomato", 32, 32, True),
-                                               load_sprite_sheets("pumpkin", 32, 32, True))
+                                               woods=load_block(block_size, "wood.png"),
+                                               up_down=load_block(block_size, "up_down.png"),
+                                               left_right=load_block(block_size, "right_left.png"),
+                                               thorn=load_block(block_size, "thorns.png"),
+                                               boost=load_block(block_size, "boost.png"),
+                                               slowdown=load_block(block_size, "slowdown.png"),
+                                               finish=load_block(block_size, "finish.png"),
+                                               hp=pygame.transform.scale(load_block(block_size, "heart.png"), (32, 32)),
+                                               drop=load_block(block_size, "drop.png"),
+                                               hero=load_sprite_sheets("hero", 32, 32, True),
+                                               tomato=load_sprite_sheets("tomato", 32, 32, True),
+                                               pumpkin=load_sprite_sheets("pumpkin", 32, 32, True),
+                                               eggplant=load_sprite_sheets("eggplant", 32, 32, False))
         run_level(bck, hp, drop, persons, objects, 2)
 
 

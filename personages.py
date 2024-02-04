@@ -93,10 +93,10 @@ class Hero(pygame.sprite.Sprite):
         self.rect = self.sprite.get_rect(topleft=(self.rect.x, self.rect.y))
         self.mask = pygame.mask.from_surface(self.sprite)
 
-    def draw(self, screen, offset_x):
+    def draw(self, screen, offset_x, offset_y):
         """Метод отрисовки персонажа"""
 
-        screen.blit(self.sprite, (self.rect.x - offset_x, self.rect.y))
+        screen.blit(self.sprite, (self.rect.x - offset_x, self.rect.y - offset_y))
 
     def update_sprite(self):
         """Метод обновления анимаций"""
@@ -175,10 +175,10 @@ class Tomato(pygame.sprite.Sprite):
         self.rect = self.sprite.get_rect(topleft=(self.rect.x, self.rect.y))
         self.mask = pygame.mask.from_surface(self.sprite)
 
-    def draw(self, screen, offset_x):
+    def draw(self, screen, offset_x, offset_y):
         """Метод отрисовки персонажа"""
 
-        screen.blit(self.sprite, (self.rect.x - offset_x, self.rect.y))
+        screen.blit(self.sprite, (self.rect.x - offset_x, self.rect.y - offset_y))
 
 
 class Pumpkin(Tomato):
