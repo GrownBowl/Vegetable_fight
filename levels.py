@@ -123,3 +123,89 @@ def create_second_level(block_size, screen_width, screen_height, woods, up_down,
             Eggplant(33 * block_size, screen_height - 9 * block_size, 32, 32, "up", eggplant, 3.5 * block_size)]
 
     return pers, total_odj
+
+
+def create_third_level(block_size, screen_width, screen_height, woods, up_down, left_right, thorn, boost, slowdown,
+                       finish, hp, drop, hero, tomato, pumpkin, eggplant, broccoli, onion):
+    # Подключение к БД
+    con = sqlite3.connect("database/date.sqlite3")
+    # Создание курсора
+    cur = con.cursor()
+    # Выполнение запроса и получение всех результатов
+    result = cur.execute("""SELECT id, collected FROM drops
+    WHERE level = 3""").fetchall()
+    con.close()
+
+    drop_obj = []
+    if not result[0][1]:
+        drop_obj += [DropBlock(12 * block_size, screen_height - 10 * block_size, block_size, drop, 7)]
+
+    if not result[1][1]:
+        drop_obj += [DropBlock(39 * block_size, screen_height - 6 * block_size, block_size, drop, 8)]
+
+    if not result[2][1]:
+        drop_obj += [DropBlock(56 * block_size, screen_height - 2 * block_size, block_size, drop, 9)]
+
+    first = [WoodBlock(i * block_size, screen_height, block_size, woods) for i in range(0, 4)]
+    second = [WoodBlock(i * block_size, screen_height - 11 * block_size, block_size, woods) for i in range(3, 5)]
+    third = [WoodBlock(i * block_size, screen_height - 13 * block_size, block_size, woods) for i in range(7, 10)]
+    fourth = [WoodBlock(i * block_size, screen_height - 8 * block_size, block_size, woods) for i in range(18, 20)]
+    fifth = [WoodBlock(i * block_size, screen_height - 9 * block_size, block_size, woods) for i in range(35, 37)]
+    sixth = [WoodBlock(i * block_size, screen_height - 6 * block_size, block_size, woods) for i in range(44, 56)]
+    seventh = [WoodBlock(i * block_size, screen_height - 10 * block_size, block_size, woods) for i in range(70, 74)]
+    eight = [WoodBlock(i * block_size, screen_height - 3 * block_size, block_size, woods) for i in range(92, 95)]
+    other = [WoodBlock(12 * block_size, screen_height - 4 * block_size, block_size, woods),
+             WoodBlock(9 * block_size, screen_height - 7 * block_size, block_size, woods),
+             WoodBlock(6 * block_size, screen_height - 10 * block_size, block_size, woods),
+             WoodBlock(12 * block_size, screen_height - 9 * block_size, block_size, woods),
+             WoodBlock(13 * block_size, screen_height - 13 * block_size, block_size, woods),
+             WoodBlock(23 * block_size, screen_height - 8 * block_size, block_size, woods),
+             WoodBlock(26 * block_size, screen_height - 3 * block_size, block_size, woods),
+             WoodBlock(30 * block_size, screen_height - 3 * block_size, block_size, woods),
+             WoodBlock(39 * block_size, screen_height - 5 * block_size, block_size, woods),
+             WoodBlock(42 * block_size, screen_height - 2 * block_size, block_size, woods),
+             WoodBlock(51 * block_size, screen_height - 1 * block_size, block_size, woods),
+             WoodBlock(56 * block_size, screen_height - 1 * block_size, block_size, woods),
+             WoodBlock(61 * block_size, screen_height - 0 * block_size, block_size, woods),
+             WoodBlock(79 * block_size, screen_height - 10 * block_size, block_size, woods),
+             WoodBlock(83 * block_size, screen_height - 7 * block_size, block_size, woods),
+             WoodBlock(87 * block_size, screen_height - 3 * block_size, block_size, woods)]
+    up_down_left_right = [LeftRightBlock(4 * block_size, screen_height, block_size, left_right, 12 * block_size),
+                          LeftRightBlock(62 * block_size, screen_height, block_size, left_right, 6 * block_size),
+                          UpDownBlock(34 * block_size, screen_height - 3 * block_size, block_size, up_down,
+                                      5 * block_size),
+                          UpDownBlock(69 * block_size, screen_height, block_size, up_down, 9 * block_size)]
+    boost_slow = [SlowdownBlock(5 * block_size, screen_height - 10 * block_size, block_size, slowdown),
+                  SlowdownBlock(56 * block_size, screen_height - 6 * block_size, block_size, slowdown),
+                  SlowdownBlock(74 * block_size, screen_height - 10 * block_size, block_size, slowdown),
+                  BoostBlock(37 * block_size, screen_height - 9 * block_size, block_size, boost)]
+    finish_obj = FinishBlock(94 * block_size, screen_height - 4 * block_size, block_size, finish)
+    thorn_first = [ThornsBlock(i * block_size, screen_height - 13 * block_size, block_size, thorn) for i in
+                   range(10, 13)]
+    thorn_second = [ThornsBlock(i * block_size, screen_height - 7 * block_size, block_size, thorn) for i in
+                    range(20, 23)]
+    thorn_third = [ThornsBlock(i * block_size, screen_height - 9 * block_size, block_size, thorn) for i in
+                   range(38, 41)]
+    thorn_fourth = [ThornsBlock(i * block_size, screen_height - 10 * block_size, block_size, thorn) for i in
+                    range(75, 78)]
+    thorn_other = [ThornsBlock(38 * block_size, screen_height - 6 * block_size, block_size, thorn),
+                   ThornsBlock(10 * block_size, screen_height - 10 * block_size, block_size, thorn),
+                   ThornsBlock(57 * block_size, screen_height - 6 * block_size, block_size, thorn),
+                   ThornsBlock(58 * block_size, screen_height - 5 * block_size, block_size, thorn),
+                   ThornsBlock(59 * block_size, screen_height - 4 * block_size, block_size, thorn)]
+    hp_obj = [Hp(9 * block_size, screen_height - 14 * block_size, block_size, hp),
+              Hp(42 * block_size, screen_height - 3 * block_size, block_size, hp)]
+    total_obj = [*first, *second, *third, *fourth, *fifth, *sixth, *seventh, *eight, *other, *up_down_left_right,
+                 *drop_obj, *boost_slow, finish_obj, *thorn_first, *thorn_second, *thorn_third, *thorn_fourth,
+                 *thorn_other, *hp_obj]
+    pers = [Hero(0, screen_height - 2 * block_size, 32, 32, hero),
+            Tomato(3 * block_size, screen_height - 12.3 * block_size, 32, 32, "right", tomato),
+            Tomato(51 * block_size, screen_height - 2.3 * block_size, 32, 32, "right", tomato),
+            Tomato(56 * block_size, screen_height - 7.3 * block_size, 32, 32, "left", tomato),
+            Tomato(92 * block_size, screen_height - 4.3 * block_size, 32, 32, "left", tomato),
+            Broccoli(7 * block_size, screen_height - 14.3 * block_size, 32, 32, "left", broccoli),
+            Broccoli(73 * block_size, screen_height - 11.3 * block_size, 32, 32, "left", broccoli),
+            Pumpkin(48 * block_size, screen_height - 7.3 * block_size, 32, 32, "left", pumpkin, 2 * block_size),
+            Eggplant(15 * block_size, screen_height - 10 * block_size, 32, 32, "up", eggplant, 4 * block_size),
+            Eggplant(42 * block_size, screen_height - 7 * block_size, 32, 32, "down", eggplant, 3 * block_size)]
+    return pers, total_obj

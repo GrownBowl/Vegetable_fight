@@ -7,7 +7,7 @@ from personages import Hero, Pumpkin, Eggplant, Onion
 from random import randrange
 from objects import ThornsBlock, SlowdownBlock, BoostBlock, UpDownBlock, LeftRightBlock, DropBlock, FinishBlock, Hp
 from byllets import Bullets, BroccoliBullet
-from levels import create_first_level, create_second_level
+from levels import create_first_level, create_second_level, create_third_level
 from pygame_gui.core import ObjectID
 
 
@@ -212,12 +212,16 @@ def bullets_update(hero_bullets, tomat_bullets, broc_bullets, objects, persons, 
             collide_person.hit()
 
         # Если пуля столкнулась с объектом на карте, то она удаляется
-        if collide(bullet, objects, bullet.speed):
+        if collide(bullet, objects, bullet.speed) and type(collide(bullet, objects, bullet.speed)) != Hp:
             hero_bullets.remove(bullet)
 
         # Если пуля вышла за границы карты, то она удаляется
-        if bullet.get_position_x() > 3000 or bullet.get_position_x() < 0:
-            hero_bullets.remove(bullet)
+        if LEVEL < 3:
+            if bullet.get_position_x() > 3000 or bullet.get_position_x() < 0:
+                hero_bullets.remove(bullet)
+        else:
+            if bullet.get_position_x() > 4600 or bullet.get_position_x() < 0:
+                hero_bullets.remove(bullet)
 
     for bullet in tomat_bullets.copy():
         # Если пуля томата столкулась с главным героем,
@@ -232,8 +236,12 @@ def bullets_update(hero_bullets, tomat_bullets, broc_bullets, objects, persons, 
             tomato_bullets.remove(bullet)
 
         # Если пуля вышла за границы карты, то она удаляется
-        if bullet.get_position_x() > 3000 or bullet.get_position_x() < 0:
-            tomato_bullets.remove(bullet)
+        if LEVEL < 3:
+            if bullet.get_position_x() > 3000 or bullet.get_position_x() < 0:
+                tomato_bullets.remove(bullet)
+        else:
+            if bullet.get_position_x() > 4600 or bullet.get_position_x() < 0:
+                tomato_bullets.remove(bullet)
 
     for bullet in broc_bullets.copy():
         # Если пуля брокколи столкулась с главным героем,
@@ -248,8 +256,12 @@ def bullets_update(hero_bullets, tomat_bullets, broc_bullets, objects, persons, 
             broccoli_bullets.remove(bullet)
 
         # Если пуля вышла за границы карты, то она удаляется
-        if bullet.get_position_x() > 3000 or bullet.get_position_x() < 0:
-            broccoli_bullets.remove(bullet)
+        if LEVEL < 3:
+            if bullet.get_position_x() > 3000 or bullet.get_position_x() < 0:
+                broccoli_bullets.remove(bullet)
+        else:
+            if bullet.get_position_x() > 4600 or bullet.get_position_x() < 0:
+                broccoli_bullets.remove(bullet)
 
     hero_bullets.update()
 
@@ -291,15 +303,13 @@ def hero_move(hero, objects, persons):
     if type(collide_left) == DropBlock:
         picked_sound.play()
         DROP_COUNT += 1
-        ind_hp = objects.index(collide_left)
-        objects.pop(ind_hp)
+        objects.remove(collide_left)
         drops_id.append(collide_left.get_id())
         collide_left = None
     if type(collide_right) == DropBlock:
         picked_sound.play()
         DROP_COUNT += 1
-        ind_hp = objects.index(collide_right)
-        objects.pop(ind_hp)
+        objects.remove(collide_right)
         drops_id.append(collide_right.get_id())
         collide_right = None
 
@@ -308,15 +318,13 @@ def hero_move(hero, objects, persons):
         if hero.get_hp() < 3:
             picked_sound.play()
             hero.hp += 1
-            ind_hp = objects.index(collide_left)
-            objects.pop(ind_hp)
+            objects.remove(collide_left)
         collide_left = None
     if type(collide_right) == Hp:
         if hero.get_hp() < 3:
             picked_sound.play()
             hero.hp += 1
-            ind_hp = objects.index(collide_right)
-            objects.pop(ind_hp)
+            objects.remove(collide_right)
         collide_right = None
 
     # Передвигаем персонажа, если он не пересекается с другими объектами
@@ -435,6 +443,10 @@ def start_screen() -> int:
                         LEVEL = 2
                         pygame.mixer.music.stop()
                         return 2
+                    if event.ui_element == third_level_button:
+                        LEVEL = 3
+                        pygame.mixer.music.stop()
+                        return 3
 
             manager.process_events(event)
         # Обновляем менеджер и отрисовываем текст
@@ -520,7 +532,11 @@ def run_level(bck, hp, drop, personages, objects, lvl):
 
     # Инициализируем необходимых персонажей
     tomato = None
+    tomato2 = None
+    tomato3 = None
+    tomato4 = None
     broccoli = None
+    broccoli2 = None
     running = True
 
     hero = personages.pop(0)
@@ -529,6 +545,13 @@ def run_level(bck, hp, drop, personages, objects, lvl):
         broccoli = personages[3]
     if lvl == 2:
         tomato = personages[0]
+    if lvl == 3:
+        tomato = personages[0]
+        tomato2 = personages[1]
+        tomato3 = personages[2]
+        tomato4 = personages[3]
+        broccoli = personages[4]
+        broccoli2 = personages[5]
 
     offset_x = 0
     offset_y = 0
@@ -539,16 +562,32 @@ def run_level(bck, hp, drop, personages, objects, lvl):
         # Обновляем счётчики времени
         TIME_COUNT += 1
         BULLET_TIME_COUNT += 1
-
+        rnd_num = randrange(100)
         # Если уровень не второй и томат жив, и случайное число равно 55, то генерируем новую пулю
-        if randrange(100) == 55 and not tomato.dead:
+        if rnd_num == 55 and not tomato.dead:
             new_tomato_bullet = Bullets(screen, tomato, tomato.direction, offset_x, offset_y,
+                                        load_sprite_sheets("bullets", 32, 32, True), "tomat_pellet_")
+            new_tomato_bullet.add(tomato_bullets)
+        if lvl == 3 and rnd_num == 68 and not tomato2.dead:
+            new_tomato_bullet = Bullets(screen, tomato2, tomato2.direction, offset_x, offset_y,
+                                        load_sprite_sheets("bullets", 32, 32, True), "tomat_pellet_")
+            new_tomato_bullet.add(tomato_bullets)
+        if lvl == 3 and rnd_num == 83 and not tomato3.dead:
+            new_tomato_bullet = Bullets(screen, tomato3, tomato3.direction, offset_x, offset_y,
+                                        load_sprite_sheets("bullets", 32, 32, True), "tomat_pellet_")
+            new_tomato_bullet.add(tomato_bullets)
+        if lvl == 3 and rnd_num == 30 and not tomato4.dead:
+            new_tomato_bullet = Bullets(screen, tomato4, tomato4.direction, offset_x, offset_y,
                                         load_sprite_sheets("bullets", 32, 32, True), "tomat_pellet_")
             new_tomato_bullet.add(tomato_bullets)
 
         # Если уровень не второй и брокколи жив, и случайное число равно 38, то генерируем новую пулю
-        if lvl != 2 and randrange(100) == 38 and not broccoli.dead:
+        if lvl != 1 and rnd_num == 38 and not broccoli.dead:
             new_brocoli_bullet = BroccoliBullet(screen, broccoli, broccoli.direction, offset_x, offset_y,
+                                                load_sprite_sheets("bullets", 32, 32, True), "broccoli_pellet_")
+            new_brocoli_bullet.add(broccoli_bullets)
+        if lvl == 3 and rnd_num == 13 and not broccoli2.dead:
+            new_brocoli_bullet = BroccoliBullet(screen, broccoli2, broccoli2.direction, offset_x, offset_y,
                                                 load_sprite_sheets("bullets", 32, 32, True), "broccoli_pellet_")
             new_brocoli_bullet.add(broccoli_bullets)
 
@@ -577,7 +616,8 @@ def run_level(bck, hp, drop, personages, objects, lvl):
         # Обновляем созданные пули
         bullets_update(hero_bullets, tomato_bullets, broccoli_bullets, objects, personages, hero)
         # Отрисовываем все объекты
-        draw(screen, hero, personages, objects, hero_bullets, tomato_bullets, broccoli_bullets, offset_x, offset_y, hp, drop)
+        draw(screen, hero, personages, objects, hero_bullets, tomato_bullets, broccoli_bullets, offset_x, offset_y, hp,
+             drop)
         clock.tick(FPS)
 
         # Обновление камеры
@@ -663,6 +703,25 @@ def main(level_num: int):
                                                pumpkin=load_sprite_sheets("pumpkin", 32, 32, True),
                                                eggplant=load_sprite_sheets("eggplant", 32, 32, False))
         run_level(bck, hp, drop, persons, objects, 2)
+
+    if level_num == 3:
+        persons, objects = create_third_level(block_size, WIDTH, HEIGHT,
+                                              woods=load_block(block_size, "wood.png"),
+                                              up_down=load_block(block_size, "up_down.png"),
+                                              left_right=load_block(block_size, "right_left.png"),
+                                              thorn=load_block(block_size, "thorns.png"),
+                                              boost=load_block(block_size, "boost.png"),
+                                              slowdown=load_block(block_size, "slowdown.png"),
+                                              finish=load_block(block_size, "finish.png"),
+                                              hp=pygame.transform.scale(load_block(block_size, "heart.png"), (32, 32)),
+                                              drop=load_block(block_size, "drop.png"),
+                                              hero=load_sprite_sheets("hero", 32, 32, True),
+                                              tomato=load_sprite_sheets("tomato", 32, 32, True),
+                                              pumpkin=load_sprite_sheets("pumpkin", 32, 32, True),
+                                              eggplant=load_sprite_sheets("eggplant", 32, 32, False),
+                                              broccoli=load_sprite_sheets("broccoli", 32, 32, True),
+                                              onion=load_sprite_sheets("onion", 160, 64, True))
+        run_level(bck, hp, drop, persons, objects, 3)
 
 
 if __name__ == '__main__':
