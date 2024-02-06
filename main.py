@@ -401,7 +401,7 @@ def start_screen() -> int:
     name_text = name_font.render("Vegetable fight", 1, (255, 255, 255))
 
     # Инициализируем UIManager
-    manager = pygame_gui.UIManager(SIZE, "jsons/theme.json")
+    manager = pygame_gui.UIManager(SIZE, "button_style\\main_menu.json")
 
     # Делаем текст
     text = pygame.font.Font(None, 36).render("Выберите уровень", 1, (255, 255, 255))
@@ -472,7 +472,7 @@ def second_screen(die_menu):
                                                                      1, (255, 255, 255))
 
     # Инициализируем UImanager
-    manager = pygame_gui.UIManager(SIZE, "jsons/theme2.json" if die_menu else "jsons/theme3.json")
+    manager = pygame_gui.UIManager(SIZE, "button_style/second_menu1.json" if die_menu else "button_style/second_menu2.json")
 
     # Ставим дополнительный текст
     text1 = pygame.font.Font("fonts/Roboto.ttf", 32).render("Начать уровень заново", 1, (255, 255, 255))
@@ -582,7 +582,7 @@ def run_level(bck, hp, drop, personages, objects, lvl):
             new_tomato_bullet.add(tomato_bullets)
 
         # Если уровень не второй и брокколи жив, и случайное число равно 38, то генерируем новую пулю
-        if lvl != 1 and rnd_num == 38 and not broccoli.dead:
+        if lvl != 2 and rnd_num == 38 and not broccoli.dead:
             new_brocoli_bullet = BroccoliBullet(screen, broccoli, broccoli.direction, offset_x, offset_y,
                                                 load_sprite_sheets("bullets", 32, 32, True), "broccoli_pellet_")
             new_brocoli_bullet.add(broccoli_bullets)
