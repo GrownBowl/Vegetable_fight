@@ -1,7 +1,7 @@
 # Vegetable fight
 
 ## Как запустить игру:
-Папка realise -> main.exe или в корневой папке main.py
+Папка release -> main.exe или в корневой папке main.py
 
 #### Управленик:
 

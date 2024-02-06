@@ -1,0 +1,84 @@
+{
+     "button_exit":
+     {
+         "colours":
+         {
+             "normal_bg":"#FBBC3A",
+             "hovered_bg":"#9D731C",
+             "selected_bg":"#6C4F12",
+             "active_bg":"#6C4F12"
+         },
+         "font":
+         {
+             "name": "jotione",
+             "size": "36",
+             "bold": "0",
+             "italic": "0",
+             "regular_path": "fonts/JotiOne-Regular.ttf"
+         },
+         "misc":
+         {
+             "shape": "rounded_rectangle",
+             "shape_corner_radius": "30",
+             "tool_tip_delay": "1.5",
+             "border_width": "0"
+         },
+        "images":
+         {
+             "normal_image": {
+                 "path": "assets/menu/exit.png"
+             },
+             "hovered_image": {
+                 "path": "assets/menu/exit.png"
+             },
+             "selected_image": {
+                 "path": "assets/menu/exit.png"
+             },
+             "disabled_image": {
+                 "path": "assets/menu/exit.png"
+             }
+
+         }
+     },
+     "button_reset":
+     {
+         "colours":
+         {
+             "normal_bg":"#FBBC3A",
+             "hovered_bg":"#9D731C",
+             "selected_bg":"#6C4F12",
+             "active_bg":"#6C4F12"
+         },
+         "font":
+         {
+             "name": "jotione",
+             "size": "36",
+             "bold": "0",
+             "italic": "0",
+             "regular_path": "fonts/JotiOne-Regular.ttf"
+         },
+         "misc":
+         {
+             "shape": "rounded_rectangle",
+             "shape_corner_radius": "30",
+             "tool_tip_delay": "1.5",
+             "border_width": "0"
+         },
+        "images":
+         {
+             "normal_image": {
+                 "path": "assets/menu/reset.png"
+             },
+             "hovered_image": {
+                 "path": "assets/menu/reset.png"
+             },
+             "selected_image": {
+                 "path": "assets/menu/reset.png"
+             },
+             "disabled_image": {
+                 "path": "assets/menu/reset.png"
+             }
+
+         }
+     }
+}
